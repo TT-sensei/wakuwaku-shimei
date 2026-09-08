@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>わくわく指名</title>
+<style>
+:root{
+  --ink:#172033; --sub:#5d6677; --navy:#172b4d;
+  --blue:#2762d4; --blue-dark:#1c4fc0;
+  --sky:#eef2f8; --amber:#e7a72d; --amber-dark:#c98d17;
+  --coral:#ee6a52; --coral-dark:#d94f38; --green:#2f8b68; --violet:#8558c7;
+  --line:#d9d4c8; --paper:#f5f2ea;
+  --shadow:0 18px 50px rgba(23,32,51,.09);
+  --shadow-lg:0 22px 55px rgba(23,32,51,.16);
+  --r-lg:22px; --r-md:16px; --r-sm:10px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+button,a,input,.chip,.mode-card,.draw-card,.person-tile{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic",sans-serif;
+  background:var(--paper);
+  min-height:100vh;
+}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+h1,h2,h3{font-weight:900}
+.topbar{height:66px;padding:0 4.5vw;display:flex;align-items:center;justify-content:space-between;background:rgba(245,242,234,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(10px);position:sticky;top:0;z-index:5}
+.brand{font-size:clamp(1.15rem,2.2vw,1.5rem);font-weight:900;color:var(--navy);letter-spacing:.02em;display:flex;align-items:center;gap:6px}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--coral);display:inline-block}
+.top-actions{display:flex;gap:8px}
+.icon-button{background:#fff;border:1px solid var(--line);border-radius:12px;min-width:44px;min-height:44px;padding:9px 14px;font-size:1.1rem;transition:.15s}
+.icon-button:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.icon-button:active{transform:translateY(0);background:var(--sky)}
+main{max-width:1180px;margin:auto;padding:30px 4.5vw 60px}
+.hero{text-align:center;padding:8px 0 24px}
+.hero .notice{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 18px;display:inline-flex;gap:8px;color:var(--sub);font-weight:700;font-size:.88rem}
+.hero h1{font-size:clamp(1.85rem,4.4vw,3.1rem);margin:12px 0 6px;color:var(--navy);letter-spacing:-.02em}
+.hero p{color:var(--sub);font-weight:600;margin:0}
+.navi-comment{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 4px;flex-wrap:wrap}
+.navi-avatar{width:60px;height:60px;object-fit:contain;flex-shrink:0}
+.navi-bubble{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;padding:9px 15px;font-weight:800;font-size:.85rem;color:var(--navy);max-width:min(280px,80vw)}
+.navi-bubble:before,.navi-bubble:after{content:"";position:absolute;top:50%;transform:translateY(-50%);border-style:solid;border-color:transparent}
+.navi-bubble:before{left:-8px;border-width:8px 9px 8px 0;border-right-color:var(--line)}
+.navi-bubble:after{left:-6.5px;border-width:7px 8px 7px 0;border-right-color:#fff}
+@media(max-width:480px){
+  .navi-comment{flex-direction:column;gap:4px}
+  .navi-bubble:before,.navi-bubble:after{display:none}
+}
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin-top:26px}
+.mode-card{appearance:none;min-height:118px;padding:18px;border-radius:var(--r-md);text-align:left;background:#fff;border:2px solid var(--line);transition:.15s border-color,.15s transform,.15s box-shadow}
+.mode-card:hover{transform:translateY(-2px);border-color:var(--blue);box-shadow:var(--shadow)}
+.mode-card:active{transform:translateY(0)}
+.mode-card .emoji{font-size:1.9rem;display:block;margin-bottom:10px}
+.mode-card h2{font-size:1.05rem;margin:0 0 4px}
+.mode-card p{margin:0;color:var(--sub);font-size:.82rem;font-weight:600}
+.home-tools{margin-top:22px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.tool-button{border-radius:12px;background:#fff;padding:12px 16px;min-height:44px;border:1px solid var(--line);font-weight:800;transition:.15s}
+.tool-button:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.tool-button:active{transform:translateY(0);background:var(--sky)}
+.roster-status{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.status-pill{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 14px;min-height:46px}
+.status-pill .ic{font-size:1.05rem}
+.status-pill .lb{display:block;font-size:.62rem;font-weight:800;color:var(--sub);line-height:1.1}
+.status-pill .vl{display:block;font-size:.92rem;font-weight:900;line-height:1.2;color:var(--navy)}
+.screen{min-height:70vh}
+.mode-head{display:flex;align-items:center;gap:16px;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap}
+.back{color:var(--blue);font-weight:800;padding:11px 4px;min-height:44px}
+.mode-head h1{margin:0;font-size:clamp(1.35rem,2.8vw,1.85rem);color:var(--navy)}
+.setup{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px 18px;display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap}
+.setup label{font-weight:800;display:flex;align-items:center;gap:8px}
+.stepper{display:inline-flex;align-items:center;gap:2px;background:var(--sky);border-radius:12px;padding:3px}
+.stepper button{width:44px;height:44px;border-radius:9px;background:#fff;font-weight:900;font-size:1.15rem;border:1px solid var(--line)}
+.stepper button:active{background:var(--sky)}
+.stepper span{min-width:30px;text-align:center;font-weight:900}
+.switch2{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.switch2 input{display:none}
+.switch2 .track{width:42px;height:24px;border-radius:99px;background:#d7e0ee;position:relative;transition:.15s}
+.switch2 .track:before{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch2 input:checked + .track{background:var(--blue)}
+.switch2 input:checked + .track:before{left:21px}
+.stage{margin-top:20px;min-height:420px;padding:22px;background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;position:relative}
+.action{margin-top:18px;background:var(--blue);color:#fff;border-radius:12px;padding:15px 36px;font-weight:900;font-size:1.1rem;display:block;margin-left:auto;margin-right:auto;transition:.15s}
+.action:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.action:active{transform:translateY(0)}
+.action[disabled]{opacity:.5;pointer-events:none}
+.hint{color:var(--sub);font-weight:700;text-align:center}
+
+/* result */
+.result{text-align:center;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+.result .label{color:var(--sub);font-weight:800;font-size:1.05rem}
+.result .winner-chip{display:inline-flex;align-items:center;gap:10px;font-size:clamp(2.1rem,6vw,3.8rem);font-weight:900;margin:14px 8px;color:var(--navy);background:#fff;border:2px solid var(--line);border-top:7px solid var(--amber);border-radius:var(--r-lg);padding:10px 30px;box-shadow:var(--shadow-lg)}
+.result .winner-chip small{font-size:.4em;color:#fff;background:var(--coral);border-radius:8px;padding:3px 9px;margin-right:6px}
+@keyframes pop{0%{transform:scale(.55) rotate(-4deg);opacity:0}70%{transform:scale(1.06) rotate(1deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+
+/* confetti */
+.confetti-piece{position:absolute;top:-12px;width:9px;height:14px;opacity:0;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:.95;transform:translateY(420px) rotate(540deg)}}
+
+/* roulette */
+.svg-label{font-size:12px;font-weight:900;fill:var(--navy)}
+.wheel-wrap{position:relative;width:min(78vw,440px)}
+.wheel-wrap:before{content:"";position:absolute;top:-14px;left:calc(50% - 17px);width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:26px solid var(--coral);z-index:3;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25))}
+.wheel{width:100%;aspect-ratio:1;border-radius:50%;position:relative;box-shadow:0 0 0 10px #fff,0 0 0 12px var(--line),var(--shadow-lg);transition:transform 4.4s cubic-bezier(.13,.7,.1,1)}
+.wheel svg{width:100%;height:100%;display:block;border-radius:50%}
+.wheel-hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:19%;aspect-ratio:1;background:#fff;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+
+/* cards / tickets */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:13px;width:100%;max-width:780px;perspective:800px}
+.draw-card{aspect-ratio:3/4;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,.9,.3,1)}
+.draw-card .face{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;font-weight:900}
+.draw-card .front{background:var(--blue);color:#fff;font-size:1.9rem}
+.draw-card .back{background:#fff;color:var(--navy);font-size:1.5rem;transform:rotateY(180deg);border:2px solid var(--amber);flex-direction:column;gap:2px}
+.draw-card .back small{font-size:.55em;color:var(--coral);font-weight:800}
+.draw-card.open{transform:rotateY(180deg)}
+.draw-card.picked-glow .back{box-shadow:0 0 0 5px #fbe6b8,0 6px 24px rgba(231,167,45,.5)}
+.draw-card:not(.open):not(.disabled):hover .front{filter:brightness(1.08)}
+.draw-card.disabled{opacity:.35;pointer-events:none}
+
+/* lottery box */
+.lottery-stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.lot-box{font-size:6rem;transition:transform .1s}
+.lot-box.shake{animation:shake .55s ease}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(5deg)}}
+.tickets{display:flex;gap:-8px;justify-content:center;flex-wrap:wrap}
+.ticket{width:64px;height:96px;margin-left:-18px;background:#fff;border-radius:8px 8px 4px 4px;box-shadow:0 5px 12px rgba(0,0,0,.14);border:2px solid var(--amber);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-weight:900;color:var(--navy);transform-origin:bottom center;transition:.35s;position:relative}
+.ticket:first-child{margin-left:0}
+.ticket:nth-child(odd){transform:rotate(-6deg)}
+.ticket:nth-child(even){transform:rotate(5deg)}
+.ticket.drawn{transform:translateY(-46px) rotate(0) scale(1.12);z-index:4;box-shadow:0 14px 26px rgba(0,0,0,.2)}
+.ticket .num{opacity:0}
+.ticket.drawn .num{opacity:1}
+
+/* bingo */
+.bingo-stage{display:flex;flex-direction:column;align-items:center;gap:16px}
+.cage{width:150px;height:150px;border-radius:50%;background:#fff;border:8px solid var(--sky);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.cage.spin .reel{animation:reel .09s linear infinite}
+@keyframes reel{0%{transform:translateY(0)}100%{transform:translateY(-14px)}}
+.reel{font-size:2.6rem;font-weight:900;color:var(--navy)}
+.tray{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;min-height:64px}
+.ball{width:56px;height:56px;border-radius:50%;background:var(--amber);display:grid;place-items:center;font-size:1.15rem;font-weight:900;color:#5a3d09;animation:drop .4s cubic-bezier(.3,1.6,.4,1)}
+@keyframes drop{0%{transform:translateY(-60px) scale(.6);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+
+/* spotlight */
+.spot-field{position:relative;width:100%}
+.spot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));width:100%;gap:11px;position:relative;z-index:1}
+.person-tile{padding:24px 8px;border-radius:var(--r-md);text-align:center;font-weight:900;background:var(--sky);transition:.15s;position:relative}
+.person-tile.lit{background:#fef6dd;box-shadow:0 0 0 4px var(--amber),0 0 30px 4px rgba(231,167,45,.5)}
+.spot-field.dim .person-tile:not(.lit){filter:brightness(.75)}
+.person-tile .no{color:var(--blue);font-size:.75rem;display:block}
+
+/* order + groups */
+.order-list{width:min(640px,100%);display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}
+.order-item{background:var(--sky);border-radius:var(--r-md);padding:12px;font-weight:900;opacity:0;transform:translateY(14px) scale(.9);animation:riseIn .4s forwards}
+.order-item .badge{display:inline-block;background:var(--blue);color:#fff;border-radius:8px;padding:1px 8px;margin-right:6px;font-size:.85em}
+@keyframes riseIn{to{opacity:1;transform:none}}
+.group-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:15px;width:100%;max-width:880px}
+.group{border-radius:var(--r-md);padding:14px;background:#fff;border:1px solid var(--line);border-top:7px solid var(--blue);opacity:0;animation:riseIn .4s forwards}
+.group:nth-child(3n+2){border-top-color:var(--coral)}
+.group:nth-child(3n){border-top-color:var(--green)}
+.group h3{margin:0 0 8px;font-size:1rem}
+.group p{margin:6px 0;font-weight:800}
+
+/* dialogs */
+dialog{width:min(760px,94vw);border:0;border-radius:var(--r-lg);padding:0;box-shadow:0 20px 60px rgba(20,35,60,.4)}
+dialog::backdrop{background:rgba(20,35,60,.5)}
+.dialog-body{padding:22px}
+.dialog-head{display:flex;justify-content:space-between;align-items:center}
+.dialog-head h2{margin:0;color:var(--navy)}
+.close{font-size:1.7rem;line-height:1;min-width:44px;min-height:44px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--sky);border-radius:14px;padding:12px 16px;margin:14px 0}
+.settings-row .lbl{font-weight:800}
+#numGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:10px;max-height:38vh;overflow:auto;margin:14px 0;padding:4px}
+.chip{position:relative;border-radius:12px;background:#fff;border:2px solid var(--line);padding:9px 4px 7px;text-align:center;font-weight:900;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.chip .nm{font-size:.62rem;font-weight:800;color:var(--sub);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.absent{background:#f2f2f2;border-color:#e3e3e3;color:#b6b6be;text-decoration:line-through}
+.chip .pencil{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:.68rem;display:flex;align-items:center;justify-content:center}
+.dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.secondary{padding:11px 15px;border-radius:11px;background:var(--sky);font-weight:800}
+.primary{padding:11px 17px;border-radius:11px;background:var(--blue);color:#fff;font-weight:900}
+.history-item{border-bottom:1px solid var(--line);padding:10px 0;font-weight:700}
+.history-item span{color:var(--sub);font-weight:800;font-size:.85rem}
+.empty{color:var(--sub);font-weight:700;text-align:center;padding:25px}
+
+@media(max-width:600px){
+  .topbar{padding:0 15px}
+  .stage{padding:16px 10px}
+  .mode-head{align-items:flex-start;flex-direction:column;gap:4px}
+  .wheel-wrap{width:82vw}
+  .mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mode-card{min-height:106px;padding:14px}
+  .mode-card .emoji{font-size:1.6rem}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>わくわく<span style="color:var(--blue)">指名</span></div>
+  <div class="top-actions">
+    <button class="icon-button" id="soundButton" title="音">♪</button>
+    <button class="icon-button" id="settingsButton" title="出席番号の設定">⚙️</button>
+  </div>
+</div>
+<main><div id="app"></div></main>
+<dialog id="settingsDialog"></dialog>
+<dialog id="historyDialog"></dialog>
+<script>
+const KEY='wakuwaku-shimei-v2';
+const app=document.querySelector('#app'), settingsDlg=document.querySelector('#settingsDialog'), historyDlg=document.querySelector('#historyDialog');
+
+const modes={
+  roulette:{emoji:'🎡',name:'ルーレット',desc:'回して、今日の一人を決めよう'},
+  cards:{emoji:'🃏',name:'カードめくり',desc:'好きな一枚をめくって選ぼう'},
+  lottery:{emoji:'🎫',name:'くじびき',desc:'箱から一枚、くじを引こう'},
+  bingo:{emoji:'🟡',name:'ビンゴボール',desc:'番号の玉が飛び出す'},
+  spot:{emoji:'🔦',name:'スポットライト',desc:'光が止まった人が今日の人'},
+  order:{emoji:'🔀',name:'順番シャッフル',desc:'発表順をまとめて決めよう'},
+  groups:{emoji:'👥',name:'グループ分け',desc:'ペアや班をさっと作れる'}
+};
+
+/* ---------- navi character (TT-sensei/navi-character-) ---------- */
+const NAVI_WEB='https://tt-sensei.github.io/navi-character-/assets/web/characters';
+const NAVI_CHARS=['sora','saku','kai','tsuki','riku','nami'];
+const NAVI_NAMES_JA={sora:'そら',saku:'さく',kai:'かい',tsuki:'つき',riku:'りく',nami:'なみ'};
+const naviUrl=(id,folder,file)=>`${NAVI_WEB}/${id}/${folder}/${file}.webp`;
+const NAVI_SCENES={
+  home:{folder:'expressions',file:'08-celebrating',
+    lines:['がんばって！','さあ、はじめよう！','ファイト！','今日もがんばろう！']},
+  celebrate:{folder:'fullbody',file:'correct',
+    lines:['よくがんばったね！','おめでとう！','やったね、がんばって！','その調子！']}
+};
+function naviComment(key){
+  const scene=NAVI_SCENES[key];
+  const id=NAVI_CHARS[Math.floor(Math.random()*NAVI_CHARS.length)];
+  const line=scene.lines[Math.floor(Math.random()*scene.lines.length)];
+  const alt=`${NAVI_NAMES_JA[id]}が応援している`;
+  return `<div class="navi-comment"><img class="navi-avatar" src="${naviUrl(id,scene.folder,scene.file)}" alt="${esc(alt)}" loading="lazy" onerror="this.style.display='none'"><div class="navi-bubble">${esc(line)}</div></div>`;
+}
+
+/* ---------- data & migration ---------- */
+function loadData(){
+  const raw=localStorage.getItem(KEY);
+  if(raw){ try{return JSON.parse(raw)}catch(e){} }
+  const old=localStorage.getItem('wakuwaku-shimei-v1');
+  if(old){
+    try{
+      const o=JSON.parse(old);
+      const names={}, absent=[];
+      (o.roster||[]).forEach(p=>{ if(p.name && p.name.trim()) names[p.no]=p.name.trim(); else absent.push(p.no); });
+      const migrated={total:(o.roster||[]).length||30, names, absent, useNames:Object.keys(names).length>0, picked:o.picked||[], history:o.history||[], sound:o.sound!==false};
+      localStorage.setItem(KEY,JSON.stringify(migrated));
+      return migrated;
+    }catch(e){}
+  }
+  return {total:30, names:{}, absent:[], useNames:false, picked:[], history:[], sound:true};
+}
+let data=loadData();
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function rand(min,max){return Math.random()*(max-min)+min}
+
+function activeList(){
+  const out=[];
+  for(let i=1;i<=data.total;i++){ if(!data.absent.includes(i)) out.push({no:i,name:data.names[i]||''}); }
+  return out;
+}
+function candidates(fair=true){
+  const all=activeList();
+  const unpicked=all.filter(p=>!data.picked.includes(p.no));
+  return (fair && unpicked.length) ? unpicked : all;
+}
+function shortLabel(p){ return (data.useNames && p.name) ? esc(p.name) : `${p.no}`; }
+function record(id,arr){
+  arr.forEach(p=>{ if(!data.picked.includes(p.no)) data.picked.push(p.no); });
+  data.history.unshift({time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),mode:modes[id].name,names:arr.map(p=>data.useNames&&p.name?`${p.no}番 ${p.name}`:`${p.no}番`)});
+  save();
+}
+
+/* ---------- sound ---------- */
+let actx=null;
+function ac(){ if(!data.sound) return null; if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null} } return actx; }
+function tone(freq,dur,type='sine',gain=.06,delay=0){
+  const c=ac(); if(!c) return;
+  const t0=c.currentTime+delay;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(gain,t0+.012);
+  g.gain.exponentialRampToValueAtTime(.0008,t0+dur);
+  o.connect(g).connect(c.destination);
+  o.start(t0); o.stop(t0+dur+.02);
+}
+function tick(){ tone(760,.05,'square',.045) }
+function fanfare(){ [523,659,784,1046].forEach((f,i)=>tone(f,.32,'triangle',.07,i*.09)) }
+function whoosh(){ const c=ac(); if(!c) return; const t0=c.currentTime; const o=c.createOscillator(),g=c.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(90,t0); o.frequency.exponentialRampToValueAtTime(340,t0+.5); g.gain.setValueAtTime(.05,t0); g.gain.exponentialRampToValueAtTime(.001,t0+.5); o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+.52) }
+
+/* ---------- confetti ---------- */
+function confetti(container,n=26){
+  const colors=['#2f6fed','#ff6b6b','#ffc857','#20b287','#8b7bf0'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left=rand(4,96)+'%';
+    el.style.background=colors[i%colors.length];
+    el.style.animationDuration=rand(.9,1.6)+'s';
+    el.style.animationDelay=rand(0,.35)+'s';
+    el.style.transform=`rotate(${rand(0,360)}deg)`;
+    container.appendChild(el);
+    setTimeout(()=>el.remove(),2200);
+  }
+}
+
+/* ---------- home ---------- */
+function statusLine(){
+  const all=activeList();
+  const won=data.picked.filter(no=>all.some(p=>p.no===no)).length;
+  return `<div class="roster-status">
+    <div class="status-pill"><span class="ic">🧑‍🎓</span><span><span class="lb">きょうの出席</span><span class="vl">${all.length}人</span></span></div>
+    <div class="status-pill"><span class="ic">🎉</span><span><span class="lb">当選済み</span><span class="vl">${won}人</span></span></div>
+  </div>`;
+}
+function home(){
+  app.innerHTML=`
+  <section class="hero">
+    <div class="notice">✨ 教室に映して、楽しく公平に！</div>
+    <h1>今日は、だれにする？</h1>
+    <p>出席番号だけでOK。名前の登録はしなくても使えます。</p>
+    ${naviComment('home')}
+  </section>
+  <section class="mode-grid">
+    ${Object.entries(modes).map(([id,m])=>`<button class="mode-card" data-mode="${id}"><span class="emoji">${m.emoji}</span><h2>${m.name}</h2><p>${m.desc}</p></button>`).join('')}
+  </section>
+  <div class="home-tools">
+    <button class="tool-button" id="historyOpen">📋 今日の履歴</button>
+    <button class="tool-button" id="resetPicked">↻ 今日の当選をリセット</button>
+  </div>
+  ${statusLine()}`;
+  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>showMode(b.dataset.mode));
+  document.querySelector('#historyOpen').onclick=showHistory;
+  document.querySelector('#resetPicked').onclick=()=>{ if(confirm('今日の当選済み記録をリセットしますか？')){ data.picked=[]; save(); home(); } };
+}
+
+/* ---------- mode screen shell ---------- */
+function showMode(id){
+  const m=modes[id], people=activeList();
+  if(!people.length){ openSettings(); return; }
+  app.innerHTML=`
+  <section class="screen">
+    <div class="mode-head">
+      <button class="back" id="back">← えらび方にもどる</button>
+      <h1>${m.emoji} ${m.name}</h1>
+      <span></span>
+    </div>
+    <div class="setup">
+      <label>選ぶ人数
+        <span class="stepper">
+          <button id="cMinus" type="button">－</button>
+          <span id="cVal">1</span>
+          <button id="cPlus" type="button">＋</button>
+        </span>
+      </label>
+      <label class="switch2"><input type="checkbox" id="fair" checked><span class="track"></span>まだ当たっていない人を優先</label>
+    </div>
+    <div id="stage" class="stage"></div>
+    <button id="start" class="action">スタート！</button>
+  </section>`;
+  document.querySelector('#back').onclick=home;
+  let count=1;
+  const cVal=document.querySelector('#cVal');
+  const maxCount=()=>Math.max(1,Math.min(8,activeList().length));
+  document.querySelector('#cMinus').onclick=()=>{ count=Math.max(1,count-1); cVal.textContent=count; };
+  document.querySelector('#cPlus').onclick=()=>{ count=Math.min(maxCount(),count+1); cVal.textContent=count; };
+  renderStage(id,people);
+  document.querySelector('#fair').onchange=()=>renderStage(id,activeList());
+  document.querySelector('#start').onclick=()=>{
+    renderStage(id,activeList());
+    document.querySelector('#start').textContent='スタート！';
+    run(id,()=>count,()=>document.querySelector('#fair').checked);
+  };
+}
+
+function renderStage(id,people){
+  const stage=document.querySelector('#stage');
+  if(id==='roulette'){
+    stage.innerHTML='<div class="wheel-wrap"><div class="wheel" id="wheel"></div><div class="wheel-hub">🎯</div></div>';
+    drawWheel(shuffle(candidatesForStage()));
+  } else if(id==='cards'){
+    const pool=shuffle(candidatesForStage());
+    stage.innerHTML=`<div class="cards" id="cards">${pool.map(p=>`<div class="draw-card" data-no="${p.no}"><div class="face front">?</div><div class="face back"><small>${p.no}番</small>${shortLabel(p)}</div></div>`).join('')}</div><p class="hint">好きなカードを${1}枚えらぼう（複数選ぶときは続けてめくれます）</p>`;
+  } else if(id==='lottery'){
+    const pool=shuffle(candidatesForStage());
+    stage.innerHTML=`<div class="lottery-stage"><div class="lot-box" id="lotBox">🎁</div><div class="tickets" id="tickets">${pool.map(p=>`<div class="ticket" data-no="${p.no}"><span class="num">${p.no}</span></div>`).join('')}</div><p class="hint">「スタート」で箱をゆらして、くじを引こう</p></div>`;
+  } else if(id==='bingo'){
+    stage.innerHTML=`<div class="bingo-stage"><div class="cage" id="cage"><div class="reel" id="reel">?</div></div><div class="tray" id="tray"></div><p class="hint">玉が飛び出すよ！</p></div>`;
+  } else if(id==='spot'){
+    const pool=candidatesForStage();
+    stage.innerHTML=`<div class="spot-field" id="spotField"><div class="spot-grid" id="spots">${pool.map(p=>`<div class="person-tile" data-no="${p.no}"><span class="no">${p.no}番</span>${data.useNames&&p.name?esc(p.name):''}</div>`).join('')}</div></div>`;
+  } else if(id==='order'){
+    stage.innerHTML='<p class="hint">全員の発表順をシャッフルします。</p>';
+  } else {
+    stage.innerHTML='<p class="hint">人数を選んで、グループを作ろう。</p>';
+  }
+}
+function candidatesForStage(){
+  const fairEl=document.querySelector('#fair');
+  return candidates(fairEl?fairEl.checked:true);
+}
+
+/* ---------- roulette ---------- */
+function drawWheel(people){
+  const wheel=document.querySelector('#wheel'); if(!wheel) return;
+  const n=people.length;
+  const colors=['#ff9a8d','#ffd467','#8cd4b5','#8ec8ff','#b9a6ff','#ff9fb7'];
+  const seg=360/n;
+  let svg=`<svg viewBox="0 0 200 200">`;
+  for(let i=0;i<n;i++){
+    const a0=(i*seg-90)*Math.PI/180, a1=((i+1)*seg-90)*Math.PI/180;
+    const x0=100+96*Math.cos(a0), y0=100+96*Math.sin(a0);
+    const x1=100+96*Math.cos(a1), y1=100+96*Math.sin(a1);
+    const large=seg>180?1:0;
+    svg+=`<path d="M100,100 L${x0.toFixed(2)},${y0.toFixed(2)} A96,96 0 ${large} 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z" fill="${colors[i%colors.length]}" stroke="#fff" stroke-width="1.5"/>`;
+    const mid=(a0+a1)/2, lx=100+64*Math.cos(mid), ly=100+64*Math.sin(mid);
+    svg+=`<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" class="svg-label" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(i*seg+seg/2)},${lx.toFixed(2)},${ly.toFixed(2)})">${esc(shortLabel(people[i]))}</text>`;
+  }
+  svg+=`</svg>`;
+  wheel.innerHTML=svg;
+  wheel.dataset.seg=seg;
+  wheel.style.transition='none';
+  wheel.style.transform='rotate(0deg)';
+  void wheel.offsetWidth;
+  wheel.style.transition='';
+}
+function runRoulette(count,fair){
+  const stage=document.querySelector('#stage'), wheel=document.querySelector('#wheel');
+  const winners=[];
+  const spinOnce=()=>{
+    const pool=shuffle(candidates(fair).filter(p=>!winners.some(w=>w.no===p.no)));
+    if(!pool.length || winners.length>=count){ finish(); return; }
+    drawWheel(pool);
+    const seg=360/pool.length;
+    const winnerIdx=Math.floor(Math.random()*pool.length);
+    const winnerObj=pool[winnerIdx];
+    const targetCenter=winnerIdx*seg+seg/2;
+    const spins=5+Math.floor(Math.random()*3);
+    const finalRotation=spins*360 + (360-targetCenter) + rand(-seg*0.28,seg*0.28);
+    whoosh();
+    const tickTimer=setInterval(tick,140);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      wheel.style.transform=`rotate(${finalRotation}deg)`;
+    }));
+    wheel.addEventListener('transitionend',function done(){
+      wheel.removeEventListener('transitionend',done);
+      clearInterval(tickTimer);
+      winners.push(winnerObj);
+      if(winners.length<count) setTimeout(spinOnce,650);
+      else finish();
+    },{once:true});
+  };
+  function finish(){ record('roulette',winners); result(stage,winners,'ルーレットの結果は…'); }
+  spinOnce();
+}
+
+/* ---------- selection helper ---------- */
+function selectedWinners(n,fair){
+  const list=shuffle(candidates(fair));
+  return list.slice(0,Math.min(n,list.length));
+}
+function result(stage,arr,caption='今日の人は…'){
+  stage.innerHTML=`<div class="result"><div class="label">${caption}</div><div>${arr.map(p=>`<span class="winner-chip"><small>${p.no}番</small>${shortLabel(p)}</span>`).join('')}</div><div class="hint">拍手で応援しよう！</div>${naviComment('celebrate')}</div>`;
+  confetti(stage,Math.min(50,20+arr.length*8));
+  fanfare();
+  const startBtn=document.querySelector('#start');
+  if(startBtn){ startBtn.textContent='もう一度'; startBtn.disabled=false; }
+}
+
+/* ---------- generic run dispatcher ---------- */
+function run(id,getCount,getFair){
+  const count=getCount(), fair=getFair();
+  const stage=document.querySelector('#stage');
+  const startBtn=document.querySelector('#start');
+  if(id==='roulette'){ startBtn.disabled=true; runRoulette(count,fair); return; }
+  if(id==='groups'){
+    const people=activeList();
+    const size=count===1?2:count;
+    const groups=[];
+    shuffle(people).forEach((p,i)=>{ (groups[i%Math.ceil(people.length/size)]??=[]).push(p); });
+    stage.innerHTML=`<div class="group-list">${groups.map((g,i)=>`<div class="group" style="animation-delay:${i*.08}s"><h3>${i+1}グループ</h3>${g.map(p=>`<p>${p.no}番 ${data.useNames&&p.name?esc(p.name):''}</p>`).join('')}</div>`).join('')}</div>`;
+    record('groups',people);
+    tone(700,.12,'triangle',.05);
+    startBtn.textContent='もう一度わける';
+    return;
+  }
+  if(id==='order'){
+    const arr=shuffle(activeList());
+    stage.innerHTML=`<div class="order-list">${arr.map((p,i)=>`<div class="order-item" style="animation-delay:${i*.06}s"><span class="badge">${i+1}</span>${p.no}番${data.useNames&&p.name?' '+esc(p.name):''}</div>`).join('')}</div>`;
+    record('order',arr);
+    tone(700,.12,'triangle',.05);
+    startBtn.textContent='もう一度シャッフル';
+    return;
+  }
+  if(id==='cards'){
+    startBtn.style.display='none';
+    const pool=candidatesForStage();
+    const need=count;
+    let taken=0;
+    const winners=[];
+    document.querySelectorAll('.draw-card').forEach(card=>{
+      card.onclick=()=>{
+        if(card.classList.contains('open')) return;
+        const no=+card.dataset.no, p=pool.find(x=>x.no===no);
+        card.classList.add('open');
+        setTimeout(()=>card.classList.add('picked-glow'),550);
+        tone(880,.14,'triangle',.06);
+        winners.push(p); taken++;
+        document.querySelectorAll('.draw-card:not(.open)').forEach(c=>{ if(taken>=need) c.classList.add('disabled'); });
+        if(taken>=need){
+          setTimeout(()=>{ record('cards',winners); result(stage,winners,'めくれたのは…'); startBtn.style.display=''; },650);
+        }
+      };
+    });
+    return;
+  }
+  if(id==='lottery'){
+    const box=document.querySelector('#lotBox');
+    box.classList.add('shake');
+    startBtn.disabled=true;
+    setTimeout(()=>{
+      box.classList.remove('shake');
+      const pool=candidatesForStage();
+      const winners=selectedWinners(count,fair);
+      const tickets=[...document.querySelectorAll('.ticket')];
+      let i=0;
+      const seq=()=>{
+        if(i>=winners.length){ record('lottery',winners); setTimeout(()=>result(stage,winners,'くじの結果は…'),300); return; }
+        const t=tickets.find(el=>+el.dataset.no===winners[i].no);
+        if(t) t.classList.add('drawn');
+        tone(900,.12,'triangle',.05);
+        i++;
+        setTimeout(seq,420);
+      };
+      seq();
+    },560);
+    return;
+  }
+  if(id==='bingo'){
+    const cage=document.querySelector('#cage'), reel=document.querySelector('#reel'), tray=document.querySelector('#tray');
+    const pool=candidatesForStage();
+    const winners=selectedWinners(count,fair);
+    startBtn.disabled=true;
+    let wi=0;
+    const drawOne=()=>{
+      cage.classList.add('spin');
+      const spin=setInterval(()=>{ reel.textContent=pool[Math.floor(Math.random()*pool.length)].no; },80);
+      setTimeout(()=>{
+        clearInterval(spin);
+        cage.classList.remove('spin');
+        reel.textContent=winners[wi].no;
+        tone(1000,.15,'triangle',.06);
+        const b=document.createElement('div'); b.className='ball'; b.textContent=winners[wi].no; tray.appendChild(b);
+        wi++;
+        if(wi<winners.length) setTimeout(drawOne,450);
+        else setTimeout(()=>{ record('bingo',winners); result(stage,winners,'出てきた番号は…'); },600);
+      },1100);
+    };
+    drawOne();
+    return;
+  }
+  if(id==='spot'){
+    const field=document.querySelector('#spotField');
+    const pool=candidatesForStage();
+    const winners=selectedWinners(count,fair);
+    startBtn.disabled=true;
+    field.classList.add('dim');
+    let wi=0;
+    const FLASHES=10;
+    const sweepOne=(cb)=>{
+      const tiles=[...field.querySelectorAll('.person-tile')];
+      const targetNo=winners[wi].no;
+      let step=0;
+      const sweep=()=>{
+        tiles.forEach(t=>t.classList.remove('lit'));
+        let tile;
+        if(step===FLASHES-1){ tile=field.querySelector(`.person-tile[data-no="${targetNo}"]`); }
+        else{ const r=pool[Math.floor(Math.random()*pool.length)]; tile=field.querySelector(`.person-tile[data-no="${r.no}"]`); }
+        tile.classList.add('lit');
+        tick();
+        step++;
+        if(step<FLASHES){ const delay=55+(step/FLASHES)*190; setTimeout(sweep,delay); }
+        else cb();
+      };
+      sweep();
+    };
+    const seq=()=>{
+      if(wi>=winners.length){ record('spot',winners); setTimeout(()=>result(stage,winners,'スポットが止まったのは…'),350); return; }
+      sweepOne(()=>{ wi++; setTimeout(seq,400); });
+    };
+    seq();
+    return;
+  }
+}
+
+/* ---------- settings ---------- */
+function openSettings(){
+  settingsDlg.innerHTML=`
+  <div class="dialog-body">
+    <div class="dialog-head"><h2>出席番号の設定</h2><button class="close" id="closeSettings">×</button></div>
+    <p class="hint" style="text-align:left">人数を決めたら、お休みの子の番号をタップして外すだけ。名前の入力は必須ではありません。</p>
+    <div class="settings-row">
+      <span class="lbl">クラスの人数</span>
+      <span class="stepper">
+        <button id="tMinus" type="button">－</button>
+        <span id="tVal">${data.total}</span>
+        <button id="tPlus" type="button">＋</button>
+      </span>
+    </div>
+    <div class="settings-row">
+      <label class="switch2"><input type="checkbox" id="useNames" ${data.useNames?'checked':''}><span class="track"></span>名前も表示する（にんい）</label>
+    </div>
+    <div id="numGrid"></div>
+    <div class="dialog-actions">
+      <button class="secondary" id="allPresent">全員出席にする</button>
+    </div>
+  </div>`;
+  settingsDlg.showModal();
+  renderGrid();
+  document.querySelector('#closeSettings').onclick=()=>{ settingsDlg.close(); home(); };
+  document.querySelector('#tMinus').onclick=()=>{ if(data.total>1){ data.total--; data.absent=data.absent.filter(n=>n<=data.total); save(); document.querySelector('#tVal').textContent=data.total; renderGrid(); } };
+  document.querySelector('#tPlus').onclick=()=>{ if(data.total<40){ data.total++; save(); document.querySelector('#tVal').textContent=data.total; renderGrid(); } };
+  document.querySelector('#useNames').onchange=(e)=>{ data.useNames=e.target.checked; save(); renderGrid(); };
+  document.querySelector('#allPresent').onclick=()=>{ data.absent=[]; save(); renderGrid(); };
+}
+function renderGrid(){
+  const grid=document.querySelector('#numGrid');
+  let html='';
+  for(let i=1;i<=data.total;i++){
+    const isAbsent=data.absent.includes(i);
+    const nm=data.names[i]||'';
+    html+=`<div class="chip ${isAbsent?'absent':''}" data-no="${i}">
+      ${data.useNames?`<button class="pencil" data-edit="${i}" title="名前を編集">✎</button>`:''}
+      <span>${i}</span>
+      ${data.useNames&&nm?`<span class="nm">${esc(nm)}</span>`:''}
+    </div>`;
+  }
+  grid.innerHTML=html;
+  grid.querySelectorAll('.chip').forEach(chip=>{
+    chip.onclick=(e)=>{
+      if(e.target.closest('[data-edit]')) return;
+      const no=+chip.dataset.no;
+      if(data.absent.includes(no)) data.absent=data.absent.filter(n=>n!==no);
+      else data.absent.push(no);
+      save();
+      chip.classList.toggle('absent');
+    };
+  });
+  grid.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.onclick=(e)=>{
+      e.stopPropagation();
+      const no=+btn.dataset.edit;
+      const nm=prompt(`${no}番の名前（空にすると番号だけになります）`, data.names[no]||'');
+      if(nm!==null){ if(nm.trim()) data.names[no]=nm.trim(); else delete data.names[no]; save(); renderGrid(); }
+    };
+  });
+}
+
+/* ---------- history ---------- */
+function showHistory(){
+  historyDlg.innerHTML=`
+  <div class="dialog-body">
+    <div class="dialog-head"><h2>今日の履歴</h2><button class="close" id="closeHistory">×</button></div>
+    <p class="hint" style="text-align:left">当選済み：${data.picked.length}人 ／ 出席：${activeList().length}人</p>
+    <div>${data.history.length?data.history.map(h=>`<div class="history-item"><span>${h.time}　${h.mode}</span><br>${h.names.join('・')}</div>`).join(''):'<p class="empty">まだ抽選していません。</p>'}</div>
+    <div class="dialog-actions"><button class="secondary" id="clearHistory">履歴を消す</button></div>
+  </div>`;
+  historyDlg.showModal();
+  document.querySelector('#closeHistory').onclick=()=>historyDlg.close();
+  document.querySelector('#clearHistory').onclick=()=>{ if(confirm('履歴をすべて消しますか？')){ data.history=[]; data.picked=[]; save(); historyDlg.close(); home(); } };
+}
+
+/* ---------- boot ---------- */
+document.querySelector('#settingsButton').onclick=openSettings;
+document.querySelector('#soundButton').onclick=()=>{ data.sound=!data.sound; save(); document.querySelector('#soundButton').textContent=data.sound?'♪':'♩'; };
+document.querySelector('#soundButton').textContent=data.sound?'♪':'♩';
+home();
+</script>
+</body>
+</html>
