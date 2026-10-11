@@ -219,7 +219,8 @@ const modes={
   bingo:{emoji:'🟡',name:'ビンゴボール',desc:'番号の玉が飛び出す'},
   spot:{emoji:'🔦',name:'スポットライト',desc:'光が止まった人が今日の人'},
   order:{emoji:'🔀',name:'順番シャッフル',desc:'発表順をまとめて決めよう'},
-  groups:{emoji:'👥',name:'グループ分け',desc:'ペアや班をさっと作れる'}
+  groups:{emoji:'👥',name:'グループ分け',desc:'ペアや班をさっと作れる'},
+  teamOrder:{emoji:'🏁',name:'班の発表順',desc:'班の数を決めて、発表する順番を抽選'}
 };
 
 /* ---------- navi character (TT-sensei/navi-character-) ---------- */
@@ -348,7 +349,7 @@ function home(){
 /* ---------- mode screen shell ---------- */
 function showMode(id){
   const m=modes[id], people=activeList();
-  if(!people.length){ openSettings(); return; }
+  if(!people.length && id!=='teamOrder'){ openSettings(); return; }
   app.innerHTML=`
   <section class="screen">
     <div class="mode-head">
@@ -357,30 +358,31 @@ function showMode(id){
       <span></span>
     </div>
     <div class="setup">
-      <label>選ぶ人数
+      <label>${id==='teamOrder'?'班の数':'選ぶ人数'}
         <span class="stepper">
           <button id="cMinus" type="button">－</button>
-          <span id="cVal">1</span>
+          <span id="cVal">${id==='teamOrder'?6:1}</span>
           <button id="cPlus" type="button">＋</button>
         </span>
       </label>
-      <label class="switch2"><input type="checkbox" id="fair" checked><span class="track"></span>まだ当たっていない人を優先</label>
+      ${id==='teamOrder'?'':'<label class="switch2"><input type="checkbox" id="fair" checked><span class="track"></span>まだ当たっていない人を優先</label>'}
     </div>
     <button id="start" class="action">スタート！</button>
     <div id="stage" class="stage"></div>
   </section>`;
   document.querySelector('#back').onclick=home;
-  let count=1;
+  let count=id==='teamOrder'?6:1;
   const cVal=document.querySelector('#cVal');
-  const maxCount=()=>Math.max(1,Math.min(8,activeList().length));
+  const maxCount=()=>id==='teamOrder'?20:Math.max(1,Math.min(8,activeList().length));
   document.querySelector('#cMinus').onclick=()=>{ count=Math.max(1,count-1); cVal.textContent=count; };
   document.querySelector('#cPlus').onclick=()=>{ count=Math.min(maxCount(),count+1); cVal.textContent=count; };
   renderStage(id,people);
-  document.querySelector('#fair').onchange=()=>renderStage(id,activeList());
+  const fair=document.querySelector('#fair');
+  if(fair) fair.onchange=()=>renderStage(id,activeList());
   document.querySelector('#start').onclick=()=>{
     renderStage(id,activeList());
     document.querySelector('#start').textContent='スタート！';
-    run(id,()=>count,()=>document.querySelector('#fair').checked);
+    run(id,()=>count,()=>fair?fair.checked:true);
   };
 }
 
@@ -402,6 +404,8 @@ function renderStage(id,people){
     stage.innerHTML=`<div class="spot-field" id="spotField"><div class="spot-grid" id="spots">${pool.map(p=>`<div class="person-tile" data-no="${p.no}"><span class="no">${p.no}番</span>${data.useNames&&p.name?esc(p.name):''}</div>`).join('')}</div></div>`;
   } else if(id==='order'){
     stage.innerHTML='<p class="hint">全員の発表順をシャッフルします。</p>';
+  } else if(id==='teamOrder'){
+    stage.innerHTML='<p class="hint">班の数を選んで、発表順を決めよう。</p>';
   } else {
     stage.innerHTML='<p class="hint">人数を選んで、グループを作ろう。</p>';
   }
@@ -484,6 +488,15 @@ function run(id,getCount,getFair){
   const stage=document.querySelector('#stage');
   const startBtn=document.querySelector('#start');
   if(id==='roulette'){ startBtn.disabled=true; runRoulette(count,fair); return; }
+  if(id==='teamOrder'){
+    const order=shuffle(Array.from({length:count},(_,i)=>i+1));
+    stage.innerHTML=`<div class="order-list">${order.map((team,i)=>`<div class="order-item" style="animation-delay:${i*.08}s"><span class="badge">${i+1}番目</span>${team}班</div>`).join('')}</div><p class="hint">この順番で発表しよう！</p>`;
+    data.history.unshift({time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),mode:modes[id].name,names:order.map((team,i)=>`${i+1}番目：${team}班`)});
+    save();
+    tone(700,.12,'triangle',.05);
+    startBtn.textContent='もう一度抽選';
+    return;
+  }
   if(id==='groups'){
     const people=activeList();
     const size=count===1?2:count;
